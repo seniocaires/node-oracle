@@ -1,6 +1,5 @@
 #!/bin/bash
 
-local password=$1
 local last_check_date_number=$(cat last_check_date_file)
 local this_check_date_number=$(date +"%Y%m%d%H%M%S")
 
@@ -33,7 +32,7 @@ for (( i=2; i < $imageNameCount; i++ )); do
 #    imageName[$i]="$(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)"
     echo $(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)
     tag=$(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)
-    ./build-image.sh library/node $tag $password $last_check_date_number
+    ./build-image.sh library/node $tag $last_check_date_number
 done
 
 #echo ${imageName[@]}
