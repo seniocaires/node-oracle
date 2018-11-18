@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# apt-get install libxml2-utils
-export XMLLINT_INDENT=\ \ \ \ 
+local password=$1
+local last_check_date_number=$(cat last_check_date_file)
+local this_check_date_number=$(date +"%Y%m%d%H%M%S")
+
+# apt-get install -y libxml2-utils jq
+#export XMLLINT_INDENT=\ \ \ \ 
 
 tags_file=/tmp/tags_file.html
 tags_url=https://hub.docker.com/r/library/node/tags/
@@ -28,6 +32,10 @@ declare -a imageName=( )
 for (( i=2; i < $imageNameCount; i++ )); do 
 #    imageName[$i]="$(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)"
     echo $(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)
+    tag=$(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)
+    ./build-image.sh library/node $tag $password $last_check_date_number
 done
 
 #echo ${imageName[@]}
+
+echo $this_check_date_number > last_check_date_file
