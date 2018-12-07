@@ -19,8 +19,6 @@ pull_image() {
   local token=$2
   local digest=$3
   local image_date=$(get_image_created_date $image $token $digest)
-#  local last_check_date_number=$(cat last_check_date_file)
-#  local this_check_date_number=$(date +"%Y%m%d%H%M%S");
 
   local image_date_number=${image_date%%.*}
   image_date_number="${image_date_number//:}"
@@ -28,19 +26,17 @@ pull_image() {
   image_date_number="${image_date_number//T}"
   image_date_number="${image_date_number//Z}"
 
-#  echo $this_check_date_number"=this_check_date"
   echo $last_check_date_number"=last_check_date_number"
   echo $image_date_number"=image_date_number"
 
   if (( $(($image_date_number)) >= $(($last_check_date_number)) ));
      then
         docker pull $image":"$tag;
-        docker build --build-arg TAG_VERSION=$tag -t seniocaires/node-oracle":"$tag .;
+        docker build -f Dockerfile-node-oracle --build-arg TAG_VERSION=$tag -t seniocaires/node-oracle":"$tag .;
         docker push seniocaires/node-oracle":"$tag;
         docker image prune -fa;
   fi
 
-#  echo $this_check_date_number > last_check_date_file
 }
 
 get_image_created_date() {

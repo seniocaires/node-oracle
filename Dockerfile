@@ -1,22 +1,18 @@
-ARG TAG_VERSION
+FROM debian:stretch
 
-FROM node:${TAG_VERSION}
+COPY . /app
 
-COPY oracle/client/ /tmp
-COPY oracle/oracle-instantclient.conf /etc/ld.so.conf.d/
+RUN apt-get update && apt-get install -y --no-install-recommends apt-transport-https ca-certificates gnupg2 git cron libxml2-utils jq && \
+    echo 'deb https://apt.dockerproject.org/repo debian-jessie main' > /etc/apt/sources.list.d/docker.list && \
+    apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
+    apt update && \
+    apt install -y docker-engine && \
+    mv /app/cron/crontab /etc/cron.d/node-oracle-cron && \
+    chmod 0644 /etc/cron.d/node-oracle-cron && \
+    /usr/bin/crontab /etc/cron.d/node-oracle-cron && \
+    chmod +x /app/entrypoint.sh && \
+    chmod +x /app/scraper.sh && \
+    chmod +x /app/build-image.sh && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    apt-get install -y zip libaio1 && \
-    cd /tmp && \
-    cat instantclient-basic-linux.x64-12.1.0.2.0.zip.* > basic.zip && \
-    unzip basic.zip && \
-    unzip instantclient-sdk-linux.x64-12.1.0.2.0.zip && \
-    mv instantclient_12_1 instantclient && \
-    mkdir /opt/oracle && \
-    mv instantclient /opt/oracle && \
-    cd /opt/oracle/instantclient && \
-    ln -s libclntsh.so.12.1 libclntsh.so && \
-    export LD_LIBRARY_PATH=/opt/oracle/instantclient:$LD_LIBRARY_PATH && \
-    ldconfig && \
-    rm -rf /tmp/*
-
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
