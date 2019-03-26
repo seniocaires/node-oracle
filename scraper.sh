@@ -3,24 +3,17 @@
 local last_check_date_number=$(cat last_check_date_file)
 local this_check_date_number=$(date +"%Y%m%d%H%M%S")
 
-tags_file=/tmp/tags_file.html
+tags_file=/tmp/tags
 tags_url=https://hub.docker.com/r/library/node/tags/
 tags_file_list=/tmp/tags_file_list.txt
 
-curl -sSL $tags_url > $tags_file
+wget -q https://registry.hub.docker.com/v1/repositories/node/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}' > $tags_file
 
-xmllint --html --noout --nowarning --format --recover --xpath '//div[@class = "FlexTable__flexItem___3vmPs FlexTable__flexItemPadding___2mohd FlexTable__flexItemGrow2___3I1KN"]' $tags_file > $tags_file_list
-
-let imageNameCount=$(xmllint --html --xpath 'count(//div)' $tags_file_list)
-
+imageNameCount=$(wc -l < /tmp/tags)
 echo "Total de imagens="$imageNameCount
 
-declare -a imageName=( )
-
-for (( i=2; i < $imageNameCount; i++ )); do 
-    echo $(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)
-    tag=$(xmllint --html --xpath '//div['$i']/text()' $tags_file_list)
-    ./build-image.sh library/node $tag $last_check_date_number
-done
+while read tag; do
+  ./build-image.sh library/node $tag $last_check_date_number
+done < $tags_file
 
 echo $this_check_date_number > last_check_date_file
